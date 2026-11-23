@@ -1,159 +1,138 @@
 # FactoryHub
 
-A full-stack garment factory management system. FactoryHub helps a clothing factory manage its daily operations in one place: products, inventory, invoices, payments, checks, customer accounts and returns, with user authentication and role-based access.
+FactoryHub is a full-stack garment factory management project with an Angular frontend and a Node.js/Express API backed by MongoDB.
 
 ## Features
 
-- **Authentication and roles** - Signup and login with JWT authentication (7-day tokens) and bcryptjs password hashing. Both signup and login are completed through a one-time email verification code (OTP): a usable JWT is issued only after the code is verified. Role-based access control: admin-only actions are protected by middleware (for example, only admins can create, update or delete products).
-- **Password reset** - Forgot-password flow by email: request a reset code, verify it, then set a new password. Unauthenticated by design, with single-use reset authorization.
-- **Rate limiting** - Auth routes (signup, login and all OTP/reset endpoints) are rate limited with express-rate-limit to reduce abuse.
-- **Factory profile** - Factory identity settings (name, contact details, logo) with logo image upload; readable by authenticated users, writable by admins only.
-- **Products** - Create, list, update and delete products, with lookup by model code and product image upload (Multer).
-- **Inventory** - Track inventory transactions for factory stock.
-- **Invoices** - Create invoices and retrieve them by invoice number.
-- **Payments and checks** - Record payments and checks, including marking a check as collected.
-- **Customer accounts** - Manage customers, their account transactions and per-customer account statements (period reports).
-- **Returns** - Handle product returns.
-- **Dashboard** - Frontend dashboard tying the modules together.
-- **Bilingual interface** - Frontend language switcher with a translation pipe (Arabic/English), including the verification, reset and settings screens.
-- **Automated tests** - Backend test scripts covering the OTP flow, password reset, factory profile and account statement.
+- Products and inventory transactions
+- Invoices, payments, checks and returns
+- Customer accounts and account statements
+- Email-verified signup/login and password reset
+- JWT authentication and role-based API access
+- Factory profile and logo upload
+- Arabic/English interface
 
-## Tech stack
+This repository is a development project. A feature list is not a claim of production readiness. Use synthetic data when demonstrating it.
 
-**Backend** (in `FactoryHub/Backend`)
+## Stack
 
-- Node.js, Express 5
-- MongoDB with Mongoose
-- JWT (jsonwebtoken) and bcryptjs for authentication
-- Nodemailer for verification and reset emails
-- express-rate-limit for auth rate limiting
-- Multer for image uploads
-- CORS, dotenv, nodemon (dev)
+Angular, TypeScript, Tailwind CSS, Node.js, Express, MongoDB/Mongoose, Nodemailer and JWT.
 
-**Frontend** (in `FactoryHub/factory-frontend`)
+## Repository layout
 
-- Angular 21 with TypeScript
-- Tailwind CSS
-- RxJS
-- Route guard (auth guard) and HTTP auth interceptor
-- Vitest and Prettier (dev)
-
-## Project structure
-
-```
-FactoryHub/
-  Backend/
-    config/        Database connection
-    controllers/   Request handlers per module
-    middleware/    Auth, role, rate-limit and upload middleware
-    models/        Mongoose models (User, OtpChallenge, PasswordReset, FactoryProfile, Product, Customer, Invoice, Payment, Check, Return, InventoryTransaction, AccountTransaction)
-    routes/        Express routers per module
-    scripts/       Migration script for legacy user accounts
-    services/      OTP and email (Nodemailer) services
-    tests/         Backend test scripts (OTP, password reset, factory profile, account statement)
-    uploads/       Uploaded product and logo images (served statically)
-    server.js      Entry point
-  factory-frontend/
-    src/app/
-      components/  Header, sidebar
-      guards/      Auth guard
-      interceptors/ Auth interceptor
-      pages/       Dashboard, products, invoices, returns, accounts, inventory, login, signup, verify-otp, forgot-password, verify-reset-otp, reset-password, factory-settings
-      services/    API, auth, language and factory-profile services
-      pipes/       Translate pipe
+```text
+Backend/                 Express API, models, services and routes
+  README.md              Backend overview, preserved separately
+  .env.example           Environment variable template, no credentials
+  server.js              API entry point
+Frontend/                Angular application
+  src/app/               Pages, components, services and guards
+  angular.json           Build configuration and budgets
+README.md                Setup and project overview
 ```
 
-## Getting started
+## Prerequisites
 
-### Prerequisites
+- Node.js 22.23.5 and npm 11.6.2 were used for the checks described below. The frontend declares npm 11.6.2. Other versions have not been verified here.
+- MongoDB, either local or an account/cluster you control
+- An SMTP service/account for signup, login and password-reset emails
 
-- Node.js and npm
-- A MongoDB connection string
-- An SMTP account for verification and reset emails
+Use the same npm version when installing dependencies. npm 10 failed to install the frontend lockfile during review; npm 11.6.2 succeeded. Check versions with `node --version` and `npm --version`.
 
-### Backend
+## Run locally
+
+### 1. Clone the project
 
 ```bash
-cd FactoryHub/Backend
-npm install
+git clone https://github.com/Ananas035/FACTORYHUB.git
+cd FACTORYHUB
 ```
 
-Create a `.env` file in `FactoryHub/Backend`:
-
-```
-MONGODB_URI=<your MongoDB connection string>
-DB_NAME=<your database name>
-JWT_SECRET=<your JWT secret>
-PORT=5000   # optional, defaults to 5000
-
-# Email delivery for OTP and password reset codes
-SMTP_HOST=<your SMTP host>
-SMTP_PORT=587
-SMTP_SECURE=false   # true for implicit TLS (usually port 465)
-SMTP_USER=<your SMTP username>
-SMTP_PASS=<your SMTP password>
-SMTP_FROM=<sender address, e.g. FactoryHub <no-reply@example.com>>
-```
-
-The server checks the SMTP configuration at startup and warns if it is incomplete; the API still boots, but OTP emails cannot be sent until SMTP is configured.
-
-Run the server:
+### 2. Set up the backend
 
 ```bash
-npm start      # production
-npm run dev    # with nodemon
+cd Backend
+npm ci
 ```
 
-The API runs on `http://localhost:5000` and serves uploaded images under `/uploads`.
-
-### Backend tests
+Copy `.env.example` to `.env` in this folder. On macOS/Linux/Git Bash:
 
 ```bash
-npm test              # all backend test scripts
-npm run test:otp      # email OTP flow
-npm run test:reset    # password reset flow
-npm run test:factory  # factory profile
-npm run test:statement  # account statement
+cp .env.example .env
 ```
 
-### Frontend
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env` locally. Never commit actual credentials. Set:
+
+- `MONGODB_URI` and `DB_NAME` for your database
+- `JWT_SECRET` to a strong unique secret generated using a trusted password manager
+- `OTP_HASH_SECRET` to a separate strong unique secret, recommended; the code falls back to `JWT_SECRET` if omitted
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` and `SMTP_FROM` for your mail service
+- `PORT` to `5000` for the current local frontend configuration
+
+`SMTP_SECURE=true` is for implicit TLS, commonly port 465. Port 587 commonly uses `SMTP_SECURE=false` with STARTTLS. Follow your provider's requirements. Use a sender your provider allows. Do not use production customer addresses during development.
+
+The template lists optional timeout/attempt/rate-limit overrides, left blank to use the code's defaults. Changing them is not necessary for basic local setup.
 
 ```bash
-cd FactoryHub/factory-frontend
-npm install
 npm start
 ```
 
-The Angular app runs on `http://localhost:4200` (the backend CORS origin is configured for it).
+For development with file watching:
 
-## API overview
+```bash
+npm run dev
+```
 
-Only the unauthenticated flow endpoints are public: `signup`, `login`, `verify-email-otp`, `resend-email-otp`, `forgot-password`, `verify-reset-otp`, `resend-reset-otp` and `reset-password`. Every other route requires a valid JWT (`Authorization` header), including `GET /api/auth/profile`. Admin-only routes also require the `ADMIN` role, including `GET /api/auth/admin`. Signup, login and all OTP/reset endpoints are rate limited.
+The API defaults to `http://localhost:5000`. A running process alone does not prove the database or email service works. Check startup logs and test the relevant flows. Without working SMTP configuration, OTP-based authentication cannot be completed.
 
-| Route | Description |
-| --- | --- |
-| `POST /api/auth/signup` | Create a user account; starts email verification (no token issued yet) |
-| `POST /api/auth/login` | Verify credentials; starts email verification (no token issued yet) |
-| `POST /api/auth/verify-email-otp` | Complete signup or login; issues the JWT |
-| `POST /api/auth/resend-email-otp` | Re-send the email verification code |
-| `POST /api/auth/forgot-password` | Request a password reset code by email |
-| `POST /api/auth/verify-reset-otp` | Verify the reset code and get a single-use reset authorization |
-| `POST /api/auth/resend-reset-otp` | Re-send the password reset code |
-| `POST /api/auth/reset-password` | Set a new password using the reset authorization |
-| `GET /api/auth/profile` | Current user profile |
-| `GET /api/auth/admin` | Admin-only check |
-| `GET/PUT /api/factory-profile` | Factory identity settings (update is admin-only) |
-| `POST /api/factory-profile/logo` | Upload or replace the factory logo (admin-only) |
-| `GET/POST /api/products` | List or create products (create is admin-only, supports image upload) |
-| `GET/PATCH/DELETE /api/products/code/:modelCode` | Read, update or delete a product by model code (update/delete admin-only) |
-| `GET/POST /api/invoices`, `GET /api/invoices/:invoiceNumber` | Invoices |
-| `GET/POST /api/customers`, `GET/PATCH/DELETE /api/customers/:id` | Customers (delete is admin-only) |
-| `GET/POST /api/inventory`, `POST /api/inventory/restock/:modelCode`, `GET /api/inventory/model/:modelCode` | Inventory (create and restock are admin-only) |
-| `GET /api/accounts/customer/:customerId` | Customer account transactions |
-| `GET /api/accounts/customer/:customerId/statement` | Customer account statement (period report) |
-| `POST /api/payments` | Record a payment |
-| `GET/POST /api/checks`, `GET /api/checks/:checkNumber`, `PATCH /api/checks/:checkNumber/collect` | Checks, including marking a check as collected |
-| `GET/POST /api/returns`, `GET /api/returns/:returnNumber` | Returns |
+### 3. Set up the frontend
 
----
+In a second terminal, from the repository root:
 
+```bash
+cd Frontend
+npm ci
+npm start
+```
+
+Open `http://localhost:4200`.
+
+## Checks
+
+From `Frontend/`:
+
+```bash
+npm test -- --watch=false
+npm run build
+```
+
+The frontend review ran 69 tests across 21 files successfully. Some component smoke tests made requests to an unavailable local backend, so this does not establish end-to-end behavior. Rerun checks after making changes.
+
+The original production build failed on stylesheet size budgets. The accompanying configuration patch sets a 12 kB warning and 16 kB error threshold per component stylesheet. This changes the acceptance thresholds, not CSS size or runtime performance. The initial bundle warning remains at 500 kB; its 1 MB error threshold is unchanged. Consolidating repeated styles and reducing initial loading size remain useful follow-up work.
+
+Backend automated test files are not included in the current repository. Broken scripts referring to missing files have been removed in the accompanying patch. No passing backend test suite is claimed. Restore real test files and scripts before claiming backend test coverage.
+
+## Before a hosted demo
+
+- Configure the frontend API URL and backend CORS for the actual deployment origins. Current source defaults point to `http://localhost:5000/api` and `http://localhost:4200`.
+- Use HTTPS and private environment variables on the host.
+- Review dependency security advisories and test any updates. Do not assume a successful build is a security review.
+- Verify database, email, authentication, role restrictions and business flows with synthetic data.
+- Confirm a supported way to create the demo administrator; do not publish real account credentials.
+- Check desktop/mobile layouts and both languages.
+
+Do not publish customer data, private factory records or credentials in screenshots or demo data.
+
+## Portfolio presentation
+
+Add real screenshots of the dashboard, products/inventory, invoices and customer statements, including mobile views. State your own contribution and distinguish training/personal work from client work. Confirm rights to any branding, uploaded images and data before sharing. A short walkthrough can demonstrate flows without exposing credentials.
+
+## Documentation
+
+See `Backend/README.md` for the existing backend overview. This root guide supplies the shared setup instructions. The frontend README also contains Angular CLI reference material.
