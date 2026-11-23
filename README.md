@@ -2,8 +2,6 @@
 
 A full-stack garment factory management system. FactoryHub helps a clothing factory manage its daily operations in one place: products, inventory, invoices, payments, checks, customer accounts and returns, with user authentication and role-based access.
 
-Repository: https://github.com/Ananas035/NTI-WEB/tree/main/FactoryHub
-
 ## Features
 
 - **Authentication and roles** - Signup and login with JWT authentication (7-day tokens) and bcryptjs password hashing. Both signup and login are completed through a one-time email verification code (OTP): a usable JWT is issued only after the code is verified. Role-based access control: admin-only actions are protected by middleware (for example, only admins can create, update or delete products).
