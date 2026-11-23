@@ -35,7 +35,3 @@ Backend API for FactoryHub, a factory management system that handles stock, prod
 1. Install dependencies: `npm install`
 2. Create a `.env` file with your variables (database URI, JWT secret, port)
 3. Start the server: `npm start`
-
-## Related
-
-Frontend (Angular): see the `Frontend` folder in this repository.
